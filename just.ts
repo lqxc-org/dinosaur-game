@@ -11,68 +11,6 @@ interface Env {
 
 const DEFAULT_BINARY = "dinosaur-game";
 
-// Centralized environment configuration for deployment
-// This eliminates repetitive if-else conditions across scripts
-interface DeployEnvConfig {
-  wranglerConfig: string;
-  verifyUrl: string;
-}
-
-const DEPLOY_ENV_CONFIG: Record<string, DeployEnvConfig> = {
-  schedule: {
-    wranglerConfig: "wrangler.nightly.jsonc",
-    verifyUrl: "https://dino-nightly.lqxclqxc.com",
-  },
-  tag: {
-    wranglerConfig: "wrangler.prod.jsonc",
-    verifyUrl: "https://dino.lqxclqxc.com",
-  },
-  main: {
-    wranglerConfig: "wrangler.main.jsonc",
-    verifyUrl: "https://dino-test.lqxclqxc.com",
-  },
-  pull_request: {
-    wranglerConfig: "wrangler.pr.jsonc",
-    verifyUrl: "https://dino-pr.lqxclqxc.com",
-  },
-};
-
-/**
- * Resolves the deployment environment based on GitHub Actions context.
- * Returns the environment key (schedule, tag, main, pull_request) or null if no match.
- */
-function resolveDeployEnv(): string | null {
-  const eventName = process.env.GITHUB_EVENT_NAME;
-  const ref = process.env.GITHUB_REF || "";
-
-  if (eventName === "schedule") {
-    return "schedule";
-  }
-
-  if (ref.startsWith("refs/tags/")) {
-    return "tag";
-  }
-
-  if (ref === "refs/heads/main") {
-    return "main";
-  }
-
-  if (eventName === "pull_request") {
-    return "pull_request";
-  }
-
-  return null;
-}
-
-/**
- * Gets the deployment configuration for the current environment.
- */
-function getDeployConfig(): DeployEnvConfig | null {
-  const env = resolveDeployEnv();
-  if (!env) return null;
-  return DEPLOY_ENV_CONFIG[env] ?? null;
-}
-
 async function installLinuxDeps() {
   await $`sudo apt-get update`;
   await $`sudo apt-get install -y --no-install-recommends pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev clang mold libwayland-dev libxkbcommon-dev`;
@@ -378,26 +316,6 @@ cli.command("package-native <target>", "Package native binary for target")
     .option("--app-version <version>", "Version string")
     .action(async (target, options) => {
         await packageNative(target, DEFAULT_BINARY, options.appVersion);
-    });
-
-cli.command("get-wrangler-config", "Get wrangler config file based on GitHub Actions context")
-    .action(() => {
-        const config = getDeployConfig();
-        if (config) {
-            console.log(config.wranglerConfig);
-        } else {
-            // Empty output indicates no matching environment - workflow uses this to skip deployment
-        }
-    });
-
-cli.command("get-verify-url", "Get verification URL based on GitHub Actions context")
-    .action(() => {
-        const config = getDeployConfig();
-        if (config) {
-            console.log(config.verifyUrl);
-        } else {
-            // Empty output indicates no matching environment - workflow uses this to skip verification
-        }
     });
 
 cli.help();

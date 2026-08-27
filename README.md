@@ -7,6 +7,7 @@ A Rust implementation of the classic Chrome Dinosaur Game. This project is built
 ## How to Play
 
 You can play the web version of the game [here](https://dino.lqxclqxc.com).
+Every commit pushed to `main` is deployed to this URL with Wrangler.
 
 ## Downloads
 
