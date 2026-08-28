@@ -25,7 +25,7 @@ codegen-units = 1
 strip = true
 
 [workspace.dependencies]
-bevy = { version = "0.18.0", default-features = false, features = [
+bevy = { version = "0.19.1", default-features = false, features = [
     "std",
     "async_executor",
     "bevy_asset",
@@ -49,19 +49,16 @@ bevy = { version = "0.18.0", default-features = false, features = [
     "x11",
     "zstd_rust",
 ] }
-bevy_kira_audio = { version = "0.25.0", features = ["android_shared_stdcxx", "ogg"] }
-bevy_asset_loader = { version = "0.25.0" }
-bevy_egui = { version = "0.39.0", default-features = false, features = ["render", "default_fonts"] }
-rand = { version = "0.8.3" }
-webbrowser = { version = "1", features = ["hardened"] }
+bevy_kira_audio = { version = "0.26.0", features = ["ogg"] }
+bevy_asset_loader = { version = "0.27.0" }
+bevy_egui = { version = "0.42.0", default-features = false, features = ["render", "default_fonts"] }
+rand = { version = "0.10.2" }
+webbrowser = { version = "1.2.4", features = ["hardened"] }
 
 # keep the following in sync with Bevy's dependencies
-winit = { version = "0.30", default-features = false }
-image = { version = "0.25.2", default-features = false }
+winit = { version = "0.30.13", default-features = false }
+image = { version = "0.25.10", default-features = false }
 ## This greatly improves WGPU's performance due to its heavy use of trace! calls
-log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
-# To use with bevy and wasm, we specific the version to 0.2
-getrandom = { version = "0.2", features = ["js"] }
-
-[workspace.build-dependencies]
-embed-resource = "1"
+log = { version = "0.4.34", features = ["max_level_debug", "release_max_level_warn"] }
+# Enable the browser Web Crypto backend used by rand on wasm32-unknown-unknown.
+getrandom = { version = "0.4.3", features = ["wasm_js"] }

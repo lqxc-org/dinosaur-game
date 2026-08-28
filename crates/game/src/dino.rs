@@ -124,7 +124,7 @@ fn dino_jump_animation(
             // Over
             let y = if elapsed.as_millis() > 500 {
                 if let Some(handle) = dino.jump_sound.take() {
-                    if let Some(instance) = audio_instances.get_mut(&handle) {
+                    if let Some(mut instance) = audio_instances.get_mut(&handle) {
                         instance.pause(Default::default());
                     }
                 }

@@ -73,7 +73,7 @@ export function extractErrorLines(logs: string): string {
   // Find all error line indices, prioritizing from the end
   const errorIndices: number[] = [];
   for (let i = logLines.length - 1; i >= 0; i--) {
-    const line = logLines[i];
+    const line = logLines[i]!;
     if (errorPatterns.some((pattern) => pattern.test(line))) {
       errorIndices.push(i);
     }

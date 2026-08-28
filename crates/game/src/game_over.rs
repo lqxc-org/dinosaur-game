@@ -42,7 +42,7 @@ fn show_game_over_info(mut commands: Commands) {
             parent.spawn((
                 Text::new("Press Space/Touch/Click to Restart!"),
                 TextFont {
-                    font_size: 64.0,
+                    font_size: FontSize::Px(64.0),
                     ..Default::default()
                 },
                 TextLayout {

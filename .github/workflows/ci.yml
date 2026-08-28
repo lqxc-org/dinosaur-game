@@ -50,8 +50,6 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: oven-sh/setup-bun@v1
       - run: bun install
-      - run: |
-          rustup component add rustc-codegen-cranelift-preview --toolchain nightly
       # Tests are currently skipped/disabled in the original workflow
       # - name: Install Dependencies
       #   run: ./just.ts install-linux-deps
@@ -98,8 +96,6 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: oven-sh/setup-bun@v1
       - run: bun install
-      - run: |
-          rustup component add rustc-codegen-cranelift-preview --toolchain nightly
       - name: Run cargo test
         run: |
           ./just.ts test

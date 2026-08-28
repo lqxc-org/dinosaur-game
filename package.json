@@ -2,13 +2,11 @@
   "name": "/app",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
-    "wrangler": "^4.56.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "@types/bun": "^1.4.0",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.127.0"
   },
   "dependencies": {
-    "cac": "^6.7.14"
+    "cac": "^7.0.0"
   }
 }

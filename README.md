@@ -4,6 +4,10 @@
 
 A Rust implementation of the classic Chrome Dinosaur Game. This project is built with the Bevy game engine and runs on native platforms (Windows, macOS, Linux) and the web (via WebAssembly).
 
+## Web Build Tooling
+
+Run `bun just.ts web` to install the WASM prerequisites and build the web bundle. The stable Trunk release and the SHA-256 checksums of its official platform archives are pinned in `just.ts`. Update `TRUNK_VERSION` and every corresponding checksum deliberately when upgrading Trunk. This avoids Cargo re-resolving Trunk's internal dependencies and makes the install independent of host compiler changes. The Rust compiler, required components, and WASM target are pinned in `rust-toolchain`.
+
 ## How to Play
 
 You can play the web version of the game [here](https://dino.lqxclqxc.com).
