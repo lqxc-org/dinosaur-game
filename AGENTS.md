@@ -4,7 +4,7 @@
 - `crates/game/` is the main Bevy game crate (`src/` for code, `assets/` for runtime assets).
 - `crates/e2e/` contains end-to-end support code and tests (`tests/`).
 - `web/` holds the web shell and static assets used by Trunk (entry at `web/index.html`).
-- Build and deployment helpers live in `just.ts`, `Trunk.toml`, and `wrangler.*.jsonc`.
+- Build and deployment helpers live in `just.ts`, `Trunk.toml`, and `wrangler.jsonc`.
 
 ## Build, Test, and Development Commands
 - `cargo run -p dinosaur-game` runs the native game in dev mode.
@@ -32,5 +32,5 @@
 
 ## Configuration & Deployment Notes
 - Web builds use Trunk (`Trunk.toml`) and output to `dist/`.
-- Cloudflare Worker configs are in `wrangler.*.jsonc`; choose the one that matches your environment.
+- The Cloudflare Worker config is `wrangler.jsonc` and deploys to `dino.lqxclqxc.com`.
 - Avoid committing generated output like `dist/` unless a release process requires it.
