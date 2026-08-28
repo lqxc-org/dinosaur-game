@@ -12,6 +12,6 @@ pub fn cleanup_component<C: Component>(queries: Query<Entity, With<C>>, mut comm
 pub fn egui_wants_pointer(contexts: &mut EguiContexts) -> bool {
     contexts
         .ctx_mut()
-        .map(|ctx| ctx.wants_pointer_input())
+        .map(|ctx| ctx.egui_wants_pointer_input())
         .unwrap_or(false)
 }

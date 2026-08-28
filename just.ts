@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
 import { cac } from "cac";
+import { chmod, copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
+import { join } from "node:path";
 
 // If you need env types similar to EnumType in cliffy, you can handle validation manually
 const VALID_ENVS = ["linux", "windows", "macos"];
@@ -10,29 +13,115 @@ interface Env {
 }
 
 const DEFAULT_BINARY = "dinosaur-game";
+// Keep stable build tools pinned here. Trunk's official release artifacts are
+// locked to these checksums so installs do not depend on Cargo's live resolver
+// or the host C compiler.
+const TRUNK_VERSION = "0.21.14";
+const BINARYEN_VERSION = "version_119";
+
+interface TrunkArtifact {
+  archive: string;
+  sha256: string;
+}
+
+const TRUNK_ARTIFACTS: Record<string, TrunkArtifact> = {
+  "darwin-arm64": {
+    archive: "trunk-aarch64-apple-darwin.tar.gz",
+    sha256: "764e299dd50d89442a4e96a236349f57961984b701e74d3dbdb39cd1c9f5101e",
+  },
+  "darwin-x64": {
+    archive: "trunk-x86_64-apple-darwin.tar.gz",
+    sha256: "f1ba0e3bbe24e0ae219c6d22c33e24e2825c1608dd27c2556e323495110f1a95",
+  },
+  "linux-arm64": {
+    archive: "trunk-aarch64-unknown-linux-gnu.tar.gz",
+    sha256: "b1d8e60e454f7fc182d9a4d95d1506ffbae947d8ba90f8f6f02da93b60f980f9",
+  },
+  "linux-x64": {
+    archive: "trunk-x86_64-unknown-linux-gnu.tar.gz",
+    sha256: "f2b4680cd239693a646a2795e4633c625328d7b2a044fbe749fa3a2fe9e7036b",
+  },
+  "win32-x64": {
+    archive: "trunk-x86_64-pc-windows-msvc.zip",
+    sha256: "cd6ac15b9daff0365e5695036791ef2ce3c63f61c014f5a8c532363266e4569c",
+  },
+};
 
 async function installLinuxDeps() {
   await $`sudo apt-get update`;
   await $`sudo apt-get install -y --no-install-recommends pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev clang mold libwayland-dev libxkbcommon-dev`;
 }
 
+async function installTrunk() {
+  const expectedVersion = `trunk ${TRUNK_VERSION}`;
+  const installed = await $`trunk --version`.quiet().nothrow();
+  if (installed.exitCode === 0 && installed.stdout.toString().trim() === expectedVersion) {
+    console.log(`${expectedVersion} is already installed`);
+    return;
+  }
+
+  const artifact = TRUNK_ARTIFACTS[`${process.platform}-${process.arch}`];
+  if (!artifact) {
+    throw new Error(`No pinned Trunk artifact for ${process.platform}-${process.arch}`);
+  }
+
+  const url = `https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/${artifact.archive}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+  }
+
+  const archiveBytes = new Uint8Array(await response.arrayBuffer());
+  const actualHash = new Bun.CryptoHasher("sha256").update(archiveBytes).digest("hex");
+  if (actualHash !== artifact.sha256) {
+    throw new Error(
+      `Checksum mismatch for ${artifact.archive}: expected ${artifact.sha256}, got ${actualHash}`,
+    );
+  }
+
+  const tempDir = await mkdtemp(join(tmpdir(), "dinosaur-game-trunk-"));
+  try {
+    const archivePath = join(tempDir, artifact.archive);
+    await Bun.write(archivePath, archiveBytes);
+
+    if (process.platform === "win32") {
+      await $`powershell -NoProfile -Command Expand-Archive -LiteralPath ${archivePath} -DestinationPath ${tempDir} -Force`;
+    } else {
+      await $`tar -xzf ${archivePath} -C ${tempDir}`;
+    }
+
+    const executableName = process.platform === "win32" ? "trunk.exe" : "trunk";
+    const cargoHome = process.env.CARGO_HOME ?? join(homedir(), ".cargo");
+    const binDir = join(cargoHome, "bin");
+    const installedPath = join(binDir, executableName);
+    await mkdir(binDir, { recursive: true });
+    await copyFile(join(tempDir, executableName), installedPath);
+    if (process.platform !== "win32") {
+      await chmod(installedPath, 0o755);
+    }
+
+    const version = (await $`${installedPath} --version`.text()).trim();
+    if (version !== expectedVersion) {
+      throw new Error(`Installed unexpected Trunk version: ${version}`);
+    }
+    console.log(`Installed ${version} at ${installedPath}`);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 async function installWasmDeps() {
   if (process.platform === "linux" && process.env.CI) {
     await installLinuxDeps();
   }
-  await Promise.all([
-    $`rustup component add rustc-codegen-cranelift-preview --toolchain nightly`,
-    // Trunk downloads wasm-bindgen by default, but we need trunk installed
-    // Use --force to overwrite if already installed (handles CI cache scenarios)
-    $`cargo install trunk --force`,
-  ]);
+  await installTrunk();
 }
 
 async function installWasmOpt() {
   // Install wasm-opt from binaryen for additional WASM optimization
-  // Using version_119 which includes -Oz optimization flag
-  const version = "version_119";
-  let platform = process.platform;
+  // This Binaryen release includes the -Oz optimization flag.
+  const version = BINARYEN_VERSION;
+  let platform: string = process.platform;
   if (platform === "darwin") {
     platform = "macos";
   } else if (platform === "win32") {
@@ -60,6 +149,12 @@ async function installWasmOpt() {
 }
 
 async function buildWasm() {
+  // Trunk 0.21 treats NO_COLOR as a boolean value rather than the usual
+  // presence-only convention, so normalize common values such as `1`.
+  if (process.env.NO_COLOR && !["true", "false"].includes(process.env.NO_COLOR)) {
+    process.env.NO_COLOR = "true";
+  }
+
   // We use trunk to build the project
   await $`trunk build web/index.html --release`;
   
@@ -79,8 +174,6 @@ async function buildRelease() {
 async function buildNative(target: string) {
     // Ensure target is added
     await $`rustup target add ${target}`;
-    // Install cranelift component
-    await $`rustup component add rustc-codegen-cranelift-preview --toolchain nightly`;
 
     // Set env vars specific to targets
     if (target.includes("apple")) {

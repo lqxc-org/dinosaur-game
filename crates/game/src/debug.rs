@@ -11,7 +11,7 @@ use bevy_egui::{egui, EguiContexts, EguiPlugin, EguiPrimaryContextPass};
 use crate::{GameConfig, GameScreen, GameStatus};
 
 /// Bevy version string (hardcoded since bevy doesn't expose VERSION constant)
-const BEVY_VERSION: &str = "0.17";
+const BEVY_VERSION: &str = "0.19";
 
 /// Update interval for performance display in seconds (166ms = ~6 updates per second)
 const PERF_DISPLAY_UPDATE_INTERVAL: f32 = 0.166;
