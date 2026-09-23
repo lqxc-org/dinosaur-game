@@ -9,7 +9,6 @@ on: [pull_request]
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   run:
@@ -21,10 +20,3 @@ jobs:
 
       - name: Check spelling of entire workspace
         uses: crate-ci/typos@master
-
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Spell Check"

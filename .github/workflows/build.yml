@@ -26,40 +26,26 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Cache Bun
+      - uses: denoland/setup-deno@v2
+      - name: Cache Deno
         uses: actions/cache@v4
         with:
           path: |
-            ~/.bun/install/cache
-            scripts/node_modules
-          key: ${{ runner.os }}-bun-scripts-${{ hashFiles('scripts/bun.lock') }}
+            ~/.cache/deno
+            node_modules
+          key: ${{ runner.os }}-deno-${{ hashFiles('deno.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-scripts-
+            ${{ runner.os }}-deno-
       - name: Install dependencies
-        working-directory: scripts
-        run: bun install --frozen-lockfile
+        run: deno install --frozen
       - name: Run lint
-        working-directory: scripts
-        run: bun run lint
+        run: deno task lint
       - name: Run format check
-        working-directory: scripts
-        run: bun run format
+        run: deno task format
       - name: Run typecheck
-        working-directory: scripts
-        run: bun run typecheck
-
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Lint Scripts"
+        run: deno task typecheck
 
   pre-release-check:
     needs: lint-scripts
@@ -74,20 +60,20 @@ jobs:
         with:
           lfs: ${{ env.use_git_lfs }}
           fetch-depth: 0 # Needed to check git history
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
       - name: Check if release is needed
         id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RESULT=$(./just.ts check-should-release)
+          RESULT=$(deno run -A just.ts check-should-release)
           echo "should_release=$RESULT" >> "$GITHUB_OUTPUT"
           echo "Release needed: $RESULT"
       - name: Get Version
         id: version
         run: |
-          VERSION=$(./just.ts get-version)
+          VERSION=$(deno run -A just.ts get-version)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
 
@@ -127,16 +113,15 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: wasm32-unknown-unknown
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
-      - run: ./just.ts install-wasm-deps
-      - run: ./just.ts install-wasm-opt
-      - run: ./just.ts build-wasm
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
+      - run: deno run -A just.ts install-wasm-deps
+      - run: deno task build-wasm
       - name: Deploy to Cloudflare Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: bunx wrangler deploy
+        run: deno task deploy
 
       - name: Verify Deployment
         run: |
@@ -188,17 +173,17 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-x86_64-unknown-linux-gnu-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: x86_64-unknown-linux-gnu
-      - run: ./just.ts install-linux-deps
+      - run: deno run -A just.ts install-linux-deps
 
       - name: Build and Package
         run: |
-          ./just.ts build-native x86_64-unknown-linux-gnu
-          ./just.ts package-native x86_64-unknown-linux-gnu --app-version ${{ needs.pre-release-check.outputs.version }}
+          deno run -A just.ts build-native x86_64-unknown-linux-gnu
+          deno run -A just.ts package-native x86_64-unknown-linux-gnu --app-version ${{ needs.pre-release-check.outputs.version }}
 
       - name: Upload binaries to artifacts
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule'
@@ -244,13 +229,13 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: x86_64-pc-windows-msvc
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
 
       - name: Build and Package
         run: |
-          bun just.ts build-native x86_64-pc-windows-msvc
-          bun just.ts package-native x86_64-pc-windows-msvc --app-version ${{ needs.pre-release-check.outputs.version }}
+          deno run -A just.ts build-native x86_64-pc-windows-msvc
+          deno run -A just.ts package-native x86_64-pc-windows-msvc --app-version ${{ needs.pre-release-check.outputs.version }}
 
       - name: Upload binaries to artifacts
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule'
@@ -296,13 +281,13 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: aarch64-apple-darwin
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
 
       - name: Build and Package
         run: |
-          ./just.ts build-native aarch64-apple-darwin
-          ./just.ts package-native aarch64-apple-darwin --app-version ${{ needs.pre-release-check.outputs.version }}
+          deno run -A just.ts build-native aarch64-apple-darwin
+          deno run -A just.ts package-native aarch64-apple-darwin --app-version ${{ needs.pre-release-check.outputs.version }}
 
       - name: Upload binaries to artifacts
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule'

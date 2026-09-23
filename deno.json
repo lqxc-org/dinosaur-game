@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  },
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "build-wasm": "deno run -A just.ts build-wasm",
+    "web": "deno run -A just.ts web",
+    "lint": "deno lint just.ts",
+    "format": "deno fmt --check just.ts deno.json",
+    "typecheck": "deno check just.ts",
+    "deploy": "deno run -A node_modules/wrangler/wrangler-dist/cli.js deploy"
+  },
+  "imports": {
+    "@david/dax": "jsr:@david/dax@0.50.0",
+    "cac": "npm:cac@7.0.0",
+    "wrangler": "npm:wrangler@4.136.3"
+  }
+}
