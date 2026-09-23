@@ -1,3 +1,6 @@
 [build]
 target = "web/index.html"
 dist = "dist"
+
+[tools]
+wasm_opt = "version_131"

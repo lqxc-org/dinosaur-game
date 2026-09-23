@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -48,20 +47,13 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
-      # Tests are currently skipped/disabled in the original workflow
-      # - name: Install Dependencies
-      #   run: ./just.ts install-linux-deps
-      # - name: Run cargo test
-      #   run: ./just.ts test
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
+      - name: Install Dependencies
+        run: deno run -A just.ts install-linux-deps
+      - name: Run cargo test
+        run: deno run -A just.ts test
 
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Test Suite on Linux AMD64 Ubuntu"
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats
@@ -94,18 +86,12 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rust-lang/setup-rust-toolchain@v1
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
       - name: Run cargo test
         run: |
-          ./just.ts test
+          deno run -A just.ts test
 
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Test Suite on MacOS"
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats
@@ -141,19 +127,13 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
       - name: Install Dependencies
-        run: ./just.ts install-linux-deps
+        run: deno run -A just.ts install-linux-deps
       - name: Run clippy
-        run: ./just.ts clippy
+        run: deno run -A just.ts clippy
 
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Clippy"
       - name: Show sccache stats
         if: always()
         run: sccache --show-stats
@@ -169,14 +149,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
+      - uses: denoland/setup-deno@v2
+      - run: deno install --frozen
       - name: Run cargo fmt
-        run: ./just.ts fmt
-
-      - name: Post CI Feedback on Failure
-        if: failure() && github.event_name == 'pull_request'
-        uses: ./.github/actions/ci-feedback
-        with:
-          github-token: ${{ secrets.COPILOT_INVOKER_TOKEN }}
-          job-name: "Format"
+        run: deno run -A just.ts fmt

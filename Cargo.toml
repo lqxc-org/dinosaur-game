@@ -52,13 +52,8 @@ bevy = { version = "0.19.1", default-features = false, features = [
 bevy_kira_audio = { version = "0.26.0", features = ["ogg"] }
 bevy_asset_loader = { version = "0.27.0" }
 bevy_egui = { version = "0.42.0", default-features = false, features = ["render", "default_fonts"] }
-rand = { version = "0.10.2" }
-webbrowser = { version = "1.2.4", features = ["hardened"] }
 
-# keep the following in sync with Bevy's dependencies
-winit = { version = "0.30.13", default-features = false }
-image = { version = "0.25.10", default-features = false }
 ## This greatly improves WGPU's performance due to its heavy use of trace! calls
-log = { version = "0.4.34", features = ["max_level_debug", "release_max_level_warn"] }
-# Enable the browser Web Crypto backend used by rand on wasm32-unknown-unknown.
-getrandom = { version = "0.4.3", features = ["wasm_js"] }
+log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
+# Enable browser entropy for crates using getrandom on WASM.
+getrandom = { version = "0.4", features = ["wasm_js"] }

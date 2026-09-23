@@ -6,7 +6,7 @@ A Rust implementation of the classic Chrome Dinosaur Game. This project is built
 
 ## Web Build Tooling
 
-Run `bun just.ts web` to install the WASM prerequisites and build the web bundle. The stable Trunk release and the SHA-256 checksums of its official platform archives are pinned in `just.ts`. Update `TRUNK_VERSION` and every corresponding checksum deliberately when upgrading Trunk. This avoids Cargo re-resolving Trunk's internal dependencies and makes the install independent of host compiler changes. The Rust compiler, required components, and WASM target are pinned in `rust-toolchain`.
+Run `deno task web` to install the WASM prerequisites and build the web bundle. The stable Trunk release and the SHA-256 checksums of its official platform archives are pinned in `just.ts`. Update `TRUNK_VERSION` and every corresponding checksum deliberately when upgrading Trunk. The Rust compiler, required components, and WASM target are pinned in `rust-toolchain`.
 
 ## How to Play
 

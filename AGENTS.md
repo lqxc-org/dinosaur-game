@@ -9,10 +9,11 @@
 ## Build, Test, and Development Commands
 - `cargo run -p dinosaur-game` runs the native game in dev mode.
 - `cargo build --release` produces an optimized native build.
-- `bun just.ts build-wasm` builds the web (WASM) bundle via Trunk into `dist/`.
-- `bun just.ts web` installs WASM deps and builds the web bundle (CI-friendly).
+- `deno task build-wasm` builds the web (WASM) bundle via Trunk into `dist/`.
+- `deno task web` installs WASM deps and builds the web bundle (CI-friendly).
 - `cargo test --workspace` runs all unit/integration tests.
-- `bun just.ts clippy` and `bun just.ts fmt` run linting and formatting checks.
+- `deno run -A just.ts clippy` and `deno run -A just.ts fmt` run Rust linting and formatting checks.
+- `deno task lint`, `deno task format`, and `deno task typecheck` check the TypeScript task runner.
 
 ## Coding Style & Naming Conventions
 - Rust 2021 edition; use `rustfmt` defaults (4-space indentation).
